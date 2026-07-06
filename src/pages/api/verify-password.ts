@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { readDB, verifyPassword, recordClick, isLinkActive, migrateDB } from '../../../lib/db.js';
+import { readDB, verifyPassword, recordClick, isLinkActive, migrateDB } from '../../lib/db.js';
 
 export const POST: APIRoute = async ({ request }) => {
   try {

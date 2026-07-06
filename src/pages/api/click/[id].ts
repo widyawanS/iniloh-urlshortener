@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { recordClick } from '../../../lib/db.js';
+import { recordClick } from '../../lib/db.js';
 
 export const POST: APIRoute = async ({ params }) => {
   const { id } = params;
