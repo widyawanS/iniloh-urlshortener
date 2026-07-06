@@ -1,0 +1,17 @@
+{
+  "name": "iniloh-shortener",
+  "type": "module",
+  "version": "2.0.0",
+  "description": "IniLoh — Super Short URL with Neubrutalism vibes",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/node": "^9.2.2",
+    "astro": "^5.17.3",
+    "qrcode": "^1.5.4"
+  }
+}

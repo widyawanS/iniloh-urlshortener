@@ -1,0 +1,83 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { 
+  title = 'IniLoh — Super Short URL', 
+  description = 'Pendekkan URL jadi super mungil. Gratis, cepat, dan aman.'
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  <meta name="theme-color" content="#1a1a2e">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://iniloh.web.id">
+  
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  
+  <!-- Theme Script (Prevent FOUC) -->
+  <script is:inline>
+    const savedTheme = localStorage.getItem('iniloh-theme');
+    // Default is dark. Only change if user explicitly saved 'light'
+    if (savedTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  </script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <a href="/" class="site-logo">
+      <span class="dot"></span>
+      IniLoh
+    </a>
+    <div class="header-actions" style="display: flex; gap: 0.8rem; align-items: center;">
+      <button id="theme-toggle" class="nb-btn nb-btn--ghost nb-btn--sm" aria-label="Toggle Theme" style="padding: 0.4rem 0.6rem; font-size: 1.2rem;">
+        🌓
+      </button>
+      <a href="/kelola" class="nb-btn nb-btn--sm nb-btn--dark" style="font-size: 0.75rem;">
+        🔑 Kelola Link
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <slot />
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>Built with ☕ by <a href="https://iniloh.web.id">IniLoh</a> — Semua tautan divalidasi keamanannya.</p>
+  </footer>
+</body>
+</html>
+
+<style is:global>
+  @import '../styles/global.css';
+</style>
+
+<script>
+  // Theme Toggle Logic
+  const themeToggle = document.getElementById('theme-toggle');
+  
+  themeToggle?.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('iniloh-theme', newTheme);
+  });
+</script>

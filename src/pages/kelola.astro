@@ -1,0 +1,236 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="IniLoh — Kelola Link" description="Kelola tautan pendek Anda menggunakan Secret Key.">
+  <main class="page-wrapper">
+    <div class="manage-card nb-card animate-in">
+      
+      <!-- Search by Secret Key -->
+      <div id="search-section">
+        <h2 class="title-lg">🔑 Kelola Link</h2>
+        <p class="text-body mt-1">
+          Masukkan <strong>Secret Key</strong> yang Anda terima saat membuat link untuk melihat dan mengelolanya.
+        </p>
+
+        <div class="password-input-row mt-2">
+          <input 
+            type="text" 
+            id="secret-key-input" 
+            class="nb-input" 
+            placeholder="sk_xxxxxxxxxxxx"
+            autofocus
+            spellcheck="false"
+          >
+          <button type="button" id="search-btn" class="nb-btn nb-btn--primary">
+            🔍 Cari
+          </button>
+        </div>
+        <div id="search-error" class="error-msg hidden"></div>
+      </div>
+
+      <!-- Link Details (shown after search) -->
+      <div id="link-details" class="hidden mt-3">
+        <h3 class="title-md">📊 Detail Link</h3>
+        
+        <div class="manage-info">
+          <div class="manage-info-row">
+            <span class="label">Short URL</span>
+            <span class="value" id="detail-short-url"></span>
+          </div>
+          <div class="manage-info-row">
+            <span class="label">URL Tujuan</span>
+            <span class="value" id="detail-target-url" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;"></span>
+          </div>
+          <div class="manage-info-row">
+            <span class="label">Total Klik</span>
+            <span class="value" id="detail-clicks"></span>
+          </div>
+          <div class="manage-info-row" id="detail-burn-row">
+            <span class="label">🔥 Burn</span>
+            <span class="value" id="detail-burn"></span>
+          </div>
+          <div class="manage-info-row" id="detail-password-row">
+            <span class="label">🔑 Password</span>
+            <span class="value" id="detail-password"></span>
+          </div>
+          <div class="manage-info-row" id="detail-message-row">
+            <span class="label">💬 Pesan</span>
+            <span class="value" id="detail-message"></span>
+          </div>
+          <div class="manage-info-row" id="detail-expiry-row">
+            <span class="label">⏰ Kadaluwarsa</span>
+            <span class="value" id="detail-expiry"></span>
+          </div>
+          <div class="manage-info-row">
+            <span class="label">Dibuat</span>
+            <span class="value" id="detail-created"></span>
+          </div>
+        </div>
+
+        <!-- Edit URL -->
+        <div class="mt-2">
+          <label class="text-mono text-small mb-1" style="display:block;">UBAH URL TUJUAN</label>
+          <input type="url" id="edit-url" class="nb-input" placeholder="https://url-baru.com">
+        </div>
+
+        <!-- Actions -->
+        <div class="manage-actions">
+          <button type="button" id="save-btn" class="nb-btn nb-btn--primary" style="flex: 1;">
+            💾 Simpan Perubahan
+          </button>
+          <button type="button" id="delete-btn" class="nb-btn nb-btn--coral" style="flex: 1;">
+            🗑️ Hapus Link
+          </button>
+        </div>
+
+        <div id="manage-status" class="hidden mt-1"></div>
+      </div>
+
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const searchBtn = document.getElementById('search-btn')!;
+  const secretKeyInput = document.getElementById('secret-key-input') as HTMLInputElement;
+  const searchError = document.getElementById('search-error')!;
+  const linkDetails = document.getElementById('link-details')!;
+  const saveBtn = document.getElementById('save-btn')!;
+  const deleteBtn = document.getElementById('delete-btn')!;
+  const manageStatus = document.getElementById('manage-status')!;
+  const editUrlInput = document.getElementById('edit-url') as HTMLInputElement;
+
+  let currentLinkId = '';
+  let currentSecretKey = '';
+
+  // ---- Search ----
+  async function searchLink() {
+    const key = secretKeyInput.value.trim();
+    if (!key) return;
+
+    searchError.classList.add('hidden');
+    linkDetails.classList.add('hidden');
+
+    try {
+      const response = await fetch('/api/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get', secretKey: key }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Link tidak ditemukan.');
+
+      currentLinkId = data.id;
+      currentSecretKey = key;
+
+      // Populate details
+      document.getElementById('detail-short-url')!.textContent = `${window.location.origin}/${data.id}`;
+      document.getElementById('detail-target-url')!.textContent = data.link.url;
+      document.getElementById('detail-clicks')!.textContent = data.link.currentClicks || '0';
+      
+      // Conditional rows
+      const burnRow = document.getElementById('detail-burn-row')!;
+      if (data.link.maxClicks) {
+        burnRow.classList.remove('hidden');
+        document.getElementById('detail-burn')!.textContent = `${data.link.currentClicks || 0}/${data.link.maxClicks} klik`;
+      } else {
+        burnRow.classList.add('hidden');
+      }
+
+      const passRow = document.getElementById('detail-password-row')!;
+      if (data.link.password) {
+        passRow.classList.remove('hidden');
+        document.getElementById('detail-password')!.textContent = 'Aktif ✅';
+      } else {
+        passRow.classList.add('hidden');
+      }
+
+      const msgRow = document.getElementById('detail-message-row')!;
+      if (data.link.message) {
+        msgRow.classList.remove('hidden');
+        document.getElementById('detail-message')!.textContent = data.link.message;
+      } else {
+        msgRow.classList.add('hidden');
+      }
+
+      const expRow = document.getElementById('detail-expiry-row')!;
+      if (data.link.expiresAt) {
+        expRow.classList.remove('hidden');
+        document.getElementById('detail-expiry')!.textContent = new Date(data.link.expiresAt).toLocaleDateString('id-ID', { 
+          day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+      } else {
+        expRow.classList.add('hidden');
+      }
+
+      document.getElementById('detail-created')!.textContent = data.link.createdAt 
+        ? new Date(data.link.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '-';
+
+      editUrlInput.value = data.link.url;
+      linkDetails.classList.remove('hidden');
+
+    } catch (err: any) {
+      searchError.textContent = '🚨 ' + err.message;
+      searchError.classList.remove('hidden');
+    }
+  }
+
+  searchBtn.addEventListener('click', searchLink);
+  secretKeyInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchLink();
+  });
+
+  // ---- Save Changes ----
+  saveBtn.addEventListener('click', async () => {
+    const newUrl = editUrlInput.value.trim();
+    if (!newUrl) return;
+
+    try {
+      const response = await fetch('/api/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update', secretKey: currentSecretKey, url: newUrl }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      manageStatus.className = 'success-msg mt-1';
+      manageStatus.textContent = '✅ URL berhasil diperbarui!';
+      document.getElementById('detail-target-url')!.textContent = newUrl;
+
+    } catch (err: any) {
+      manageStatus.className = 'error-msg mt-1';
+      manageStatus.textContent = '🚨 ' + err.message;
+    }
+  });
+
+  // ---- Delete Link ----
+  deleteBtn.addEventListener('click', async () => {
+    if (!confirm('Yakin ingin menghapus link ini? Tindakan ini tidak bisa dibatalkan.')) return;
+
+    try {
+      const response = await fetch('/api/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', secretKey: currentSecretKey }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      manageStatus.className = 'success-msg mt-1';
+      manageStatus.textContent = '✅ Link berhasil dihapus!';
+      linkDetails.classList.add('hidden');
+      secretKeyInput.value = '';
+
+    } catch (err: any) {
+      manageStatus.className = 'error-msg mt-1';
+      manageStatus.textContent = '🚨 ' + err.message;
+    }
+  });
+</script>

@@ -1,0 +1,67 @@
+{
+  "123": {
+    "url": "https://simkah.web.id/blog/rekomendasi-nikah-sudah-terkirim-tapi-belum-terbaca-di-kua-tujuan-ini-yang-harus-dicek",
+    "createdAt": "2026-07-05T22:20:42.896Z",
+    "currentClicks": 0
+  },
+  "1231": {
+    "url": "https://simkah.web.id/blog/dari-rakernas-ke-ruang-hati-empat-pelajaran-penting-untuk-aktor-bimas-islam",
+    "createdAt": "2026-07-05T22:20:42.896Z",
+    "currentClicks": 0
+  },
+  "lktx5": {
+    "url": "https://www.google.com",
+    "secretKey": "sk_fde9deff75b8ea5a373cda91",
+    "currentClicks": 1,
+    "createdAt": "2026-07-05T22:20:42.900Z"
+  },
+  "0htm1": {
+    "url": "https://www.wikipedia.org",
+    "secretKey": "sk_399229ea7fdf78914b56b2b4",
+    "currentClicks": 1,
+    "createdAt": "2026-07-05T22:21:46.301Z",
+    "maxClicks": 1
+  },
+  "9k1a7": {
+    "secretKey": "sk_3f8cd06da6a5f0b79d1ffe55",
+    "currentClicks": 0,
+    "createdAt": "2026-07-05T23:17:15.082Z",
+    "urls": [
+      "https://google.com",
+      "https://github.com",
+      "https://example.com"
+    ],
+    "url": "https://google.com",
+    "mode": "roulette"
+  },
+  "ee": {
+    "secretKey": "sk_35c4dc0be8d6efeacb40c5ac",
+    "currentClicks": 1,
+    "createdAt": "2026-07-05T23:17:49.907Z",
+    "url": "https://x.com/cakwied/status/2073764557672357918"
+  },
+  "test-roulette": {
+    "secretKey": "sk_a8aafb58396e846b589eb1d2",
+    "currentClicks": 0,
+    "createdAt": "2026-07-05T23:17:56.280Z",
+    "urls": [
+      "https://google.com",
+      "https://github.com",
+      "https://example.com"
+    ],
+    "url": "https://google.com",
+    "mode": "roulette"
+  },
+  "test-normal-qr": {
+    "secretKey": "sk_6009fc3b3fff77dc978d6f07",
+    "currentClicks": 0,
+    "createdAt": "2026-07-05T23:18:29.160Z",
+    "url": "https://example.com"
+  },
+  "kxmkc": {
+    "secretKey": "sk_57f24816f2328b71ca234995",
+    "currentClicks": 0,
+    "createdAt": "2026-07-05T23:45:03.901Z",
+    "url": "https://github.com"
+  }
+}

@@ -1,0 +1,491 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="IniLoh — Super Short URL" description="Pendekkan URL jadi super mungil. Gratis, cepat, aman. Fitur Burn After Read, Password Protection, dan lainnya.">
+  <main class="page-wrapper">
+    <div class="creator-container">
+      
+      <!-- Hero -->
+      <div class="hero animate-in">
+        <h1 class="title-xl">
+          Ini<span class="highlight">Loh</span><span class="blink">_</span>
+        </h1>
+        <p class="text-body mt-1">
+          Pendekkan URL jadi <strong>super mungil</strong>. Gratis, cepat, aman.
+        </p>
+        <div class="hero-badges mt-2">
+          <span class="nb-badge nb-badge--lime">🔥 Burn After Read</span>
+          <span class="nb-badge nb-badge--coral">🔑 Password</span>
+          <span class="nb-badge nb-badge--mint">💬 Pesan</span>
+          <span class="nb-badge nb-badge--lime">🎰 Roulette</span>
+        </div>
+      </div>
+
+      <!-- Form Card -->
+      <div class="nb-card animate-in-delay-1 form-card">
+        <form id="shorten-form">
+          <!-- Mode Toggle (Normal / Roulette) -->
+          <div class="mode-toggle mb-2">
+            <button type="button" class="mode-btn active" id="mode-normal" data-mode="normal">🔗 Normal</button>
+            <button type="button" class="mode-btn" id="mode-roulette" data-mode="roulette">🎰 Roulette</button>
+          </div>
+
+          <!-- URL Input (Normal Mode) -->
+          <div class="mb-2" id="normal-url-section">
+            <label class="text-mono text-small mb-1" style="display:block;">URL TUJUAN</label>
+            <input 
+              type="url" 
+              id="long-url" 
+              class="nb-input" 
+              placeholder="https://website-yang-sangat-panjang.com/halaman/artikel" 
+            >
+          </div>
+
+          <!-- Roulette URLs (Roulette Mode) -->
+          <div class="mb-2 hidden" id="roulette-url-section">
+            <label class="text-mono text-small mb-1" style="display:block;">URL ROULETTE (SATU PER BARIS, MIN. 2)</label>
+            <textarea 
+              id="roulette-urls" 
+              class="nb-input" 
+              placeholder="https://url-pertama.com&#10;https://url-kedua.com&#10;https://url-ketiga.com"
+              rows="4"
+              style="resize: vertical; font-size: 0.85rem;"
+            ></textarea>
+          </div>
+
+          <!-- Custom Keyword -->
+          <div class="mb-2">
+            <label class="text-mono text-small mb-1" style="display:block;">CUSTOM LINK (OPSIONAL)</label>
+            <div class="nb-input-group">
+              <span class="nb-prefix">iniloh.web.id/</span>
+              <input 
+                type="text" 
+                id="custom-url" 
+                class="nb-input" 
+                placeholder="kata-custom" 
+                pattern="[a-zA-Z0-9\-]*" 
+                maxlength="30"
+                title="Huruf, angka, dan strip saja"
+              >
+            </div>
+          </div>
+
+          <!-- Advanced Options Toggle -->
+          <div class="option-section">
+            <div class="option-toggle" id="option-toggle">
+              <span class="toggle-icon">▶</span>
+              <span>⚡ Opsi Lanjutan</span>
+            </div>
+            <div class="option-fields" id="option-fields">
+              
+              <!-- Burn After Read -->
+              <div class="option-row">
+                <label>🔥 Burn</label>
+                <select id="max-clicks">
+                  <option value="">Tidak aktif</option>
+                  <option value="1">Hancur setelah 1 klik</option>
+                  <option value="3">Hancur setelah 3 klik</option>
+                  <option value="5">Hancur setelah 5 klik</option>
+                  <option value="10">Hancur setelah 10 klik</option>
+                </select>
+              </div>
+
+              <!-- Password -->
+              <div class="option-row">
+                <label>🔑 Password</label>
+                <input 
+                  type="text" 
+                  id="link-password" 
+                  class="nb-input" 
+                  placeholder="Kosongkan jika tidak perlu"
+                  maxlength="50"
+                >
+              </div>
+
+              <!-- Hidden Message -->
+              <div class="option-row">
+                <label>💬 Pesan</label>
+                <input 
+                  type="text" 
+                  id="link-message" 
+                  class="nb-input" 
+                  placeholder="Pesan untuk penerima link"
+                  maxlength="200"
+                >
+              </div>
+
+              <!-- Expiry -->
+              <div class="option-row">
+                <label>⏰ Kadaluwarsa</label>
+                <select id="link-expiry">
+                  <option value="">Tidak kadaluwarsa</option>
+                  <option value="1h">1 jam</option>
+                  <option value="24h">24 jam</option>
+                  <option value="7d">7 hari</option>
+                  <option value="30d">30 hari</option>
+                </select>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="nb-btn nb-btn--primary nb-btn--full mt-2" id="submit-btn">
+            ⚡ Buat Tautan Pendek
+          </button>
+
+          <!-- Error Message -->
+          <div id="error-msg" class="error-msg hidden"></div>
+        </form>
+
+        <!-- Result -->
+        <div id="result-container" class="result-area hidden">
+          <p class="title-md">✨ Tautan berhasil dibuat!</p>
+          
+          <div class="result-url-box">
+            <input type="text" id="short-url" class="nb-input" readonly>
+            <button type="button" id="copy-btn" class="nb-btn nb-btn--dark">📋 Salin</button>
+          </div>
+
+          <!-- QR Code -->
+          <div class="qr-section mt-2">
+            <canvas id="qr-canvas"></canvas>
+            <button type="button" id="download-qr" class="nb-btn nb-btn--sm nb-btn--mint mt-1">
+              📥 Download QR Code
+            </button>
+          </div>
+
+          <div id="secret-key-container" class="secret-key-box mt-2 hidden">
+            <span class="label">🔑 Secret Key — Simpan untuk mengelola link ini:</span>
+            <span id="secret-key-value"></span>
+          </div>
+
+          <div class="flex-center gap-1 mt-2">
+            <span id="result-badges"></span>
+          </div>
+
+          <button type="button" id="new-link-btn" class="nb-btn nb-btn--ghost nb-btn--full mt-2">
+            + Buat Link Baru
+          </button>
+        </div>
+      </div>
+
+
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .creator-container {
+    max-width: 900px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 1rem 0;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .highlight {
+    color: var(--accent-lime);
+    position: relative;
+  }
+
+  .highlight::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--accent-lime);
+    opacity: 0.3;
+    border-radius: 3px;
+  }
+
+  .blink {
+    animation: blink 1s step-start infinite;
+    color: var(--accent-lime);
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .form-card {
+    position: relative;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+
+  /* Mode Toggle */
+  .mode-toggle {
+    display: flex;
+    gap: 0;
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 3px 3px 0px var(--border-color);
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    background: white;
+    color: var(--text-dark);
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .mode-btn:first-child {
+    border-right: var(--border-width) solid var(--border-color);
+  }
+
+  .mode-btn.active {
+    background: var(--accent-lime);
+    color: var(--text-dark);
+  }
+
+  .mode-btn:hover:not(.active) {
+    background: #f0f0f0;
+  }
+
+  /* QR Section */
+  .qr-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .qr-section canvas {
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius-sm);
+    box-shadow: 3px 3px 0px var(--border-color);
+    background: white;
+    padding: 12px;
+  }
+</style>
+
+<script>
+  import QRCode from 'qrcode';
+
+  // ---- Mode Toggle ----
+  const modeNormalBtn = document.getElementById('mode-normal')!;
+  const modeRouletteBtn = document.getElementById('mode-roulette')!;
+  const normalUrlSection = document.getElementById('normal-url-section')!;
+  const rouletteUrlSection = document.getElementById('roulette-url-section')!;
+  let currentMode = 'normal';
+
+  function setMode(mode: string) {
+    currentMode = mode;
+    if (mode === 'normal') {
+      modeNormalBtn.classList.add('active');
+      modeRouletteBtn.classList.remove('active');
+      normalUrlSection.classList.remove('hidden');
+      rouletteUrlSection.classList.add('hidden');
+    } else {
+      modeRouletteBtn.classList.add('active');
+      modeNormalBtn.classList.remove('active');
+      rouletteUrlSection.classList.remove('hidden');
+      normalUrlSection.classList.add('hidden');
+    }
+  }
+
+  modeNormalBtn.addEventListener('click', () => setMode('normal'));
+  modeRouletteBtn.addEventListener('click', () => setMode('roulette'));
+
+  // ---- Options Toggle ----
+  const optionToggle = document.getElementById('option-toggle');
+  const optionFields = document.getElementById('option-fields');
+  
+  optionToggle?.addEventListener('click', () => {
+    optionToggle.classList.toggle('active');
+    optionFields?.classList.toggle('show');
+  });
+
+  // ---- Form Submit ----
+  const form = document.getElementById('shorten-form');
+  const longUrlInput = document.getElementById('long-url') as HTMLInputElement;
+  const rouletteUrlsInput = document.getElementById('roulette-urls') as HTMLTextAreaElement;
+  const customUrlInput = document.getElementById('custom-url') as HTMLInputElement;
+  const maxClicksSelect = document.getElementById('max-clicks') as HTMLSelectElement;
+  const passwordInput = document.getElementById('link-password') as HTMLInputElement;
+  const messageInput = document.getElementById('link-message') as HTMLInputElement;
+  const expirySelect = document.getElementById('link-expiry') as HTMLSelectElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const errorMsg = document.getElementById('error-msg')!;
+  const resultContainer = document.getElementById('result-container')!;
+  const shortUrlInput = document.getElementById('short-url') as HTMLInputElement;
+  const copyBtn = document.getElementById('copy-btn')!;
+  const secretKeyContainer = document.getElementById('secret-key-container')!;
+  const secretKeyValue = document.getElementById('secret-key-value')!;
+  const resultBadges = document.getElementById('result-badges')!;
+  const newLinkBtn = document.getElementById('new-link-btn')!;
+  const qrCanvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
+  const downloadQrBtn = document.getElementById('download-qr')!;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.classList.add('hidden');
+    resultContainer.classList.add('hidden');
+
+    const body: Record<string, any> = {
+      customId: customUrlInput.value.trim(),
+    };
+
+    if (currentMode === 'roulette') {
+      // Parse roulette URLs (one per line)
+      const rawUrls = rouletteUrlsInput.value.trim();
+      if (!rawUrls) {
+        errorMsg.textContent = '🚨 Masukkan minimal 2 URL untuk mode roulette.';
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+      const urls = rawUrls.split('\n')
+        .map((u: string) => u.trim())
+        .filter((u: string) => u.length > 0)
+        .map((u: string) => !/^https?:\/\//i.test(u) ? 'https://' + u : u);
+      
+      if (urls.length < 2) {
+        errorMsg.textContent = '🚨 Mode roulette butuh minimal 2 URL.';
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+      body.rouletteUrls = urls;
+      body.url = urls[0]; // fallback
+    } else {
+      let url = longUrlInput.value.trim();
+      if (!url) {
+        errorMsg.textContent = '🚨 URL tujuan wajib diisi.';
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+      if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+      }
+      body.url = url;
+    }
+
+    // Optional fields
+    const maxClicks = maxClicksSelect.value;
+    if (maxClicks) body.maxClicks = parseInt(maxClicks);
+
+    const password = passwordInput.value.trim();
+    if (password) body.password = password;
+
+    const message = messageInput.value.trim();
+    if (message) body.message = message;
+
+    const expiry = expirySelect.value;
+    if (expiry) body.expiry = expiry;
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = '⏳ Memproses...';
+
+    try {
+      const response = await fetch('/api/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Gagal membuat tautan.');
+      }
+
+      // Build result
+      const shortUrl = `${window.location.origin}/${data.id}`;
+      shortUrlInput.value = shortUrl;
+      resultContainer.classList.remove('hidden');
+
+      // Generate QR Code
+      try {
+        await QRCode.toCanvas(qrCanvas, shortUrl, {
+          width: 180,
+          margin: 1,
+          color: { dark: '#1a1a2e', light: '#ffffff' },
+        });
+      } catch { /* QR generation failed, not critical */ }
+
+      // Show secret key
+      if (data.secretKey) {
+        secretKeyValue.textContent = data.secretKey;
+        secretKeyContainer.classList.remove('hidden');
+      }
+
+      // Show badges
+      let badges = '';
+      if (data.features) {
+        if (data.features.burn) badges += `<span class="nb-badge nb-badge--coral">🔥 Burn: ${data.features.burn}x</span> `;
+        if (data.features.password) badges += `<span class="nb-badge nb-badge--lime">🔑 Password</span> `;
+        if (data.features.message) badges += `<span class="nb-badge nb-badge--mint">💬 Pesan</span> `;
+        if (data.features.expiry) badges += `<span class="nb-badge nb-badge--coral">⏰ ${data.features.expiry}</span> `;
+        if (data.features.roulette) badges += `<span class="nb-badge nb-badge--lime">🎰 Roulette: ${data.features.roulette} URL</span> `;
+      }
+      resultBadges.innerHTML = badges;
+
+      // Reset form
+      longUrlInput.value = '';
+      rouletteUrlsInput.value = '';
+      customUrlInput.value = '';
+      maxClicksSelect.value = '';
+      passwordInput.value = '';
+      messageInput.value = '';
+      expirySelect.value = '';
+
+    } catch (err: any) {
+      errorMsg.textContent = '🚨 ' + err.message;
+      errorMsg.classList.remove('hidden');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = '⚡ Buat Tautan Pendek';
+    }
+  });
+
+  // ---- Copy Button ----
+  copyBtn?.addEventListener('click', () => {
+    shortUrlInput.select();
+    navigator.clipboard.writeText(shortUrlInput.value).then(() => {
+      copyBtn.textContent = '✅ Tersalin!';
+      setTimeout(() => { copyBtn.textContent = '📋 Salin'; }, 2000);
+    });
+  });
+
+  // ---- Download QR Code ----
+  downloadQrBtn?.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'iniloh-qr.png';
+    link.href = qrCanvas.toDataURL('image/png');
+    link.click();
+  });
+
+  // ---- New Link Button ----
+  newLinkBtn?.addEventListener('click', () => {
+    resultContainer.classList.add('hidden');
+    secretKeyContainer.classList.add('hidden');
+    longUrlInput.focus();
+  });
+</script>

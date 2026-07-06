@@ -1,0 +1,252 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { readDB, isLinkActive, migrateDB } from '../lib/db.js';
+
+const { id } = Astro.params;
+
+// Migrate DB if needed (old format -> new format)
+migrateDB();
+
+const db = readDB();
+const link = db[id!];
+
+// Determine link state
+let state: 'not_found' | 'expired' | 'burned' | 'password' | 'active' = 'not_found';
+let linkData: any = null;
+
+if (link) {
+  linkData = typeof link === 'string' ? { url: link, currentClicks: 0 } : link;
+  
+  if (linkData.expiresAt && new Date(linkData.expiresAt) < new Date()) {
+    state = 'expired';
+  } else if (linkData.maxClicks && linkData.currentClicks >= linkData.maxClicks) {
+    state = 'burned';
+  } else if (linkData.password) {
+    state = 'password';
+  } else {
+    state = 'active';
+  }
+}
+---
+
+<Layout title={`IniLoh — Redirect`} description="Anda akan dialihkan ke halaman tujuan.">
+  <main class="page-wrapper">
+
+    {/* ---- NOT FOUND ---- */}
+    {state === 'not_found' && (
+      <div class="nb-card nb-card--coral visitor-card animate-in">
+        <div class="visitor-icon">🔍</div>
+        <h2 class="title-lg">Tautan Tidak Ditemukan</h2>
+        <p class="text-body mt-1">
+          Link ini tidak ada di database kami, atau mungkin sudah dihapus.
+        </p>
+        <a href="/" class="nb-btn nb-btn--dark nb-btn--full mt-3">
+          ← Buat Tautan Baru
+        </a>
+      </div>
+    )}
+
+    {/* ---- EXPIRED ---- */}
+    {state === 'expired' && (
+      <div class="nb-card nb-card--lavender visitor-card animate-in">
+        <div class="visitor-icon">⏰</div>
+        <h2 class="title-lg">Tautan Kadaluwarsa</h2>
+        <p class="text-body mt-1">
+          Link ini sudah melewati batas waktu yang ditentukan oleh pembuatnya.
+        </p>
+        <a href="/" class="nb-btn nb-btn--dark nb-btn--full mt-3">
+          ← Buat Tautan Baru
+        </a>
+      </div>
+    )}
+
+    {/* ---- BURNED ---- */}
+    {state === 'burned' && (
+      <div class="nb-card nb-card--coral visitor-card animate-in">
+        <div class="visitor-icon">🔥</div>
+        <h2 class="title-lg">Tautan Telah Hangus</h2>
+        <p class="text-body mt-1" style="color: white;">
+          Link ini telah mencapai batas klik maksimum dan sudah otomatis dihancurkan (Burn After Read).
+        </p>
+        <a href="/" class="nb-btn nb-btn--dark nb-btn--full mt-3">
+          ← Buat Tautan Baru
+        </a>
+      </div>
+    )}
+
+    {/* ---- PASSWORD GATE ---- */}
+    {state === 'password' && (
+      <div class="nb-card nb-card--accent password-gate animate-in" data-link-id={id}>
+        <div class="lock-icon">🔐</div>
+        <h2 class="title-lg">Tautan Terkunci</h2>
+        <p class="text-body mt-1">
+          Pembuat link ini mengunci aksesnya dengan password. Masukkan password untuk melanjutkan.
+        </p>
+        
+        <div class="password-input-row">
+          <input 
+            type="password" 
+            id="password-input" 
+            class="nb-input" 
+            placeholder="Masukkan password..."
+            autofocus
+          >
+          <button type="button" id="password-submit" class="nb-btn nb-btn--dark">
+            🔓 Buka
+          </button>
+        </div>
+        <div id="password-error" class="error-msg hidden"></div>
+      </div>
+    )}
+
+    {/* ---- ACTIVE LINK ---- */}
+    {state === 'active' && linkData && (
+      <div class="nb-card visitor-card animate-in" data-link-id={id} data-link-url={linkData.url}
+        data-is-roulette={linkData.mode === 'roulette' ? 'true' : 'false'}
+        data-roulette-urls={linkData.urls ? JSON.stringify(linkData.urls) : ''}
+      >
+        <div class="visitor-icon">{linkData.mode === 'roulette' ? '🎰' : '🌐'}</div>
+        <h2 class="title-lg">{linkData.mode === 'roulette' ? 'Link Roulette!' : 'Peringatan Pengalihan'}</h2>
+        
+        {linkData.mode === 'roulette' ? (
+          <p class="text-body mt-1">
+            Link ini akan membawa Anda ke salah satu dari <strong>{linkData.urls.length} URL acak</strong>. Bersiaplah untuk kejutan!
+          </p>
+        ) : (
+          <p class="text-body mt-1">
+            Tautan ini akan membawa Anda ke alamat tujuan berikut:
+          </p>
+        )}
+
+        {/* Show URL for normal links, hide for roulette (surprise!) */}
+        {linkData.mode !== 'roulette' && (
+          <a href={linkData.url} class="visitor-url" target="_blank" rel="noopener noreferrer">
+            {linkData.url}
+          </a>
+        )}
+
+        {/* Roulette URL list (numbered, no reveal of which one is picked) */}
+        {linkData.mode === 'roulette' && linkData.urls && (
+          <div class="roulette-list">
+            {linkData.urls.map((rUrl: string, i: number) => (
+              <div class="roulette-item">
+                <span class="roulette-num">#{i + 1}</span>
+                <span class="roulette-url">{rUrl}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Hidden Message */}
+        {linkData.message && (
+          <div class="visitor-message">
+            <div class="msg-label">💬 Pesan dari pembuat:</div>
+            {linkData.message}
+          </div>
+        )}
+
+        {/* Burn Info */}
+        {linkData.maxClicks && (
+          <div class="burn-info">
+            🔥 Sisa klik: {linkData.maxClicks - (linkData.currentClicks || 0)} dari {linkData.maxClicks}
+          </div>
+        )}
+
+        {/* Click Counter — Social Proof */}
+        {(linkData.currentClicks || 0) > 0 && (
+          <div class="click-counter">
+            👁️ Link ini sudah dikunjungi <strong>{linkData.currentClicks}</strong> kali
+          </div>
+        )}
+
+        <p class="text-small mt-1 text-center" style="color: var(--text-dark); opacity: 0.6;">
+          {linkData.mode === 'roulette' 
+            ? 'Klik tombol di bawah untuk menguji keberuntungan Anda!'
+            : 'Hanya lanjutkan jika Anda mempercayai alamat di atas.'}
+        </p>
+
+        <button id="continue-btn" class="nb-btn nb-btn--primary nb-btn--full mt-2" data-url={linkData.url} data-id={id}>
+          {linkData.mode === 'roulette' ? '🎲 Putar Roulette!' : '✅ OK, Lanjutkan Sekarang'}
+        </button>
+      </div>
+    )}
+
+  </main>
+</Layout>
+
+<script>
+  // ---- Password Submit ----
+  const passwordSubmit = document.getElementById('password-submit');
+  const passwordInput = document.getElementById('password-input') as HTMLInputElement;
+  const passwordError = document.getElementById('password-error');
+  const passwordGate = document.querySelector('.password-gate') as HTMLElement;
+
+  async function submitPassword() {
+    if (!passwordInput || !passwordGate) return;
+    
+    const password = passwordInput.value.trim();
+    if (!password) return;
+
+    const linkId = passwordGate.dataset.linkId;
+
+    try {
+      const response = await fetch('/api/verify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: linkId, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Redirect to the revealed URL
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Password salah.');
+      }
+    } catch (err: any) {
+      if (passwordError) {
+        passwordError.textContent = '🚨 ' + err.message;
+        passwordError.classList.remove('hidden');
+      }
+    }
+  }
+
+  passwordSubmit?.addEventListener('click', submitPassword);
+  passwordInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitPassword();
+  });
+
+  // ---- Continue Button (Active Link) ----
+  const continueBtn = document.getElementById('continue-btn') as HTMLButtonElement;
+  const visitorCard = document.querySelector('.visitor-card') as HTMLElement;
+
+  continueBtn?.addEventListener('click', async () => {
+    const id = continueBtn.dataset.id;
+    if (!id) return;
+
+    // Check if roulette mode
+    const isRoulette = visitorCard?.dataset.isRoulette === 'true';
+    let targetUrl = continueBtn.dataset.url;
+
+    if (isRoulette) {
+      try {
+        const urls = JSON.parse(visitorCard.dataset.rouletteUrls || '[]');
+        if (urls.length > 0) {
+          targetUrl = urls[Math.floor(Math.random() * urls.length)];
+        }
+      } catch { /* use fallback URL */ }
+    }
+
+    if (!targetUrl) return;
+
+    // Record click on server
+    try {
+      await fetch(`/api/click/${id}`, { method: 'POST' });
+    } catch {
+      // Don't block redirect if click recording fails
+    }
+
+    window.location.href = targetUrl;
+  });
+</script>
