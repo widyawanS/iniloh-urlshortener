@@ -4,9 +4,13 @@ import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_FILE = path.join(__dirname, '..', '..', 'database.json');
+const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+const DB_FILE = path.join(DATA_DIR, 'database.json');
 
-// Ensure DB exists
+// Ensure DB directory and file exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
 if (!fs.existsSync(DB_FILE)) {
   fs.writeFileSync(DB_FILE, JSON.stringify({}));
 }
